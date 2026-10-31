@@ -328,3 +328,174 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+/* KARTU FOTO TOKOH */
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 18px;
+}
+
+.person-card {
+  text-align: center;
+  padding: 18px 10px;
+}
+
+.person-avatar {
+  width: 78px;
+  height: 78px;
+  padding: 0;
+  border: 3px solid #d5a44f;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e9f0eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: #245b46;
+  margin-bottom: 10px;
+}
+
+.person-avatar img,
+.radial-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.person-card h3 {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.open-actions {
+  margin-top: 9px;
+  font-size: 11px;
+  padding: 7px 12px;
+}
+
+/* LAYAR MENU MELINGKAR */
+.radial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.68);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+}
+
+.radial-menu {
+  position: relative;
+  width: min(340px, 94vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.radial-center {
+  position: absolute;
+  width: 126px;
+  height: 126px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #f5f0e7;
+  border: 5px solid #d5a44f;
+  color: #245b46;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  padding: 8px;
+  z-index: 2;
+}
+
+.radial-avatar {
+  width: 51px;
+  height: 51px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #16899a;
+  border: 3px solid white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 25px;
+}
+
+.radial-center strong {
+  font-size: 11px;
+  max-width: 105px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radial-center small {
+  font-size: 9px;
+}
+
+.radial-action {
+  position: absolute;
+  width: 90px;
+  height: 70px;
+  left: 50%;
+  top: 50%;
+  margin-left: -45px;
+  margin-top: -35px;
+  border: 2px solid #d6a44e;
+  border-radius: 15px;
+  background: #fffdf8;
+  color: #c28d35;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  transform:
+    rotate(var(--angle))
+    translateY(-137px)
+    rotate(calc(0deg - var(--angle)));
+  box-shadow: 0 3px 10px #0002;
+  padding: 5px;
+}
+
+.radial-action span {
+  font-size: 23px;
+}
+
+.radial-action small {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.radial-action:hover {
+  background: #f7ead0;
+  color: #245b46;
+}
+
+.radial-close {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  color: #333;
+  font-size: 23px;
+  padding: 0;
+  z-index: 5;
+}
+
+@media (max-width: 380px) {
+  .radial-menu {
+    transform: scale(0.88);
+  }
+}
