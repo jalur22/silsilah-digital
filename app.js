@@ -1,336 +1,733 @@
 
-const form = document.getElementById("personForm");
-const showFormButton = document.getElementById("showFormButton");
-const cancelButton = document.getElementById("cancelButton");
-const peopleList = document.getElementById("peopleList");
+/* =====================================================
+   SILSILAH DIGITAL
+   APLIKASI UTAMA - VERSI 1
+===================================================== */
 
-let people = JSON.parse(localStorage.getItem("silsilahPeople") || "[]");
-let relationships = JSON.parse(localStorage.getItem("silsilahRelationships") || "[]");
+"use strict";
+
+/* ---------- PENYIMPANAN DATA ---------- */
+
+const PEOPLE_KEY = "silsilahPeople";
+const RELATIONS_KEY = "silsilahRelationships";
+
+let people = [];
+let relations = [];
 let selectedPersonId = null;
+let zoomLevel = 1;
+let currentPhotoData = null;
+
+function loadData() {
+  try {
+    people = JSON.parse(localStorage.getItem(PEOPLE_KEY)) || [];
+    relations = JSON.parse(localStorage.getItem(RELATIONS_KEY)) || [];
+  } catch (error) {
+    people = [];
+    relations = [];
+  }
+
+  if (!Array.isArray(people)) people = [];
+  if (!Array.isArray(relations)) relations = [];
+}
 
 function saveData() {
-  localStorage.setItem("silsilahPeople", JSON.stringify(people));
-  localStorage.setItem("silsilahRelationships", JSON.stringify(relationships));
+  try {
+    localStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
+    localStorage.setItem(RELATIONS_KEY, JSON.stringify(relations));
+    updateSummary();
+    return true;
+  } catch (error) {
+    showToast("Penyimpanan penuh. Coba gunakan foto yang lebih kecil.", true);
+    return false;
+  }
+}
+
+/* ---------- FUNGSI BANTU ---------- */
+
+const $ = (id) => document.getElementById(id);
+
+function makeId() {
+  return "tokoh-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
 }
 
 function escapeHTML(value) {
-  return String(value || "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#039;"
-  })[c]);
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
 }
 
 function getPerson(id) {
   return people.find(person => String(person.id) === String(id));
 }
 
-function updateStats() {
-  document.getElementById("totalPeople").textContent = people.length;
-  document.getElementById("totalRelations").textContent = relationships.length;
-  document.getElementById("totalSources").textContent =
-    people.filter(person => person.source).length;
+function showToast(message, isError = false) {
+  const container = $("toastContainer");
+  const toast = document.createElement("div");
+
+  toast.className = "toast" + (isError ? " error" : "");
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 3000);
 }
 
-function renderPeople() {
-  if (!people.length) {
-    peopleList.innerHTML = `
-      <div class="empty-state">
-        <span>🌱</span>
-        <h3>Belum ada data tokoh</h3>
-        <p>Tambahkan tokoh pertama untuk memulai silsilah.</p>
-      </div>`;
-    updateStats();
+/* ---------- NAVIGASI HALAMAN ---------- */
+
+function navigateTo(page) {
+  document.querySelectorAll(".page-section").forEach(section => {
+    section.classList.remove("active");
+  });
+
+  document.querySelectorAll(".nav-item").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+
+  const pageElement = $(page + "Page");
+  if (pageElement) pageElement.classList.add("active");
+
+  const titles = {
+    tree: ["Pohon Silsilah", "Telusuri hubungan keluarga dan jejak leluhur."],
+    people: ["Daftar Tokoh", "Seluruh tokoh yang tercatat dalam arsip."],
+    sources: ["Arsip & Sumber", "Dokumen dan referensi sejarah."],
+    about: ["Tentang Arsip", "Mengenal Silsilah Digital."]
+  };
+
+  $("pageTitle").textContent = titles[page][0];
+  $("pageSubtitle").textContent = titles[page][1];
+
+  $("sidebar").classList.remove("open");
+}
+
+document.querySelectorAll(".nav-item").forEach(button => {
+  button.addEventListener("click", () => navigateTo(button.dataset.page));
+});
+
+$("mobileMenuButton").addEventListener("click", () => {
+  $("sidebar").classList.toggle("open");
+});
+
+/* ---------- RINGKASAN DATA ---------- */
+
+function updateSummary() {
+  $("totalPeople").textContent = people.length;
+  $("totalRelations").textContent = relations.length;
+
+  const sourceCount = people.filter(person => person.source).length;
+  $("totalSources").textContent = sourceCount;
+}
+
+/* ---------- FORMULIR TOKOH ---------- */
+
+function openPersonForm(person = null) {
+  closeRadialMenu();
+  currentPhotoData = person?.photo || null;
+
+  $("personForm").reset();
+  $("personId").value = person?.id || "";
+  $("formAction").value = person ? "edit" : "add";
+
+  $("modalTitle").textContent = person ? "Edit Tokoh" : "Tambah Tokoh";
+  $("modalDescription").textContent = person
+    ? "Perbarui informasi tokoh."
+    : "Masukkan informasi tokoh ke dalam arsip.";
+
+  $("fullName").value = person?.fullName || "";
+  $("nickname").value = person?.nickname || "";
+  $("gender").value = person?.gender || "";
+  $("birthPlace").value = person?.birthPlace || "";
+  $("birthDate").value = person?.birthDate || "";
+  $("deathPlace").value = person?.deathPlace || "";
+  $("deathDate").value = person?.deathDate || "";
+  $("biography").value = person?.biography || "";
+  $("verification").value = person?.verification || "Belum diverifikasi";
+  $("source").value = person?.source || "";
+
+  $("modalOverlay").hidden = false;
+}
+
+function closePersonForm() {
+  $("modalOverlay").hidden = true;
+  currentPhotoData = null;
+}
+
+$("addPersonButton").addEventListener("click", () => openPersonForm());
+$("emptyAddButton").addEventListener("click", () => openPersonForm());
+$("closeModalButton").addEventListener("click", closePersonForm);
+$("cancelModalButton").addEventListener("click", closePersonForm);
+
+$("modalOverlay").addEventListener("click", event => {
+  if (event.target === $("modalOverlay")) closePersonForm();
+});
+
+/* Foto tokoh: disimpan sebagai data lokal */
+
+$("personPhoto").addEventListener("change", event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    showToast("File harus berupa gambar.", true);
+    event.target.value = "";
     return;
   }
 
-  peopleList.innerHTML = `
-    <div class="people-grid">
-      ${people.map(person => `
-        <article class="person-card">
-          <button class="person-avatar"
-            type="button"
-            data-person-id="${escapeHTML(person.id)}"
-            aria-label="Buka tindakan untuk ${escapeHTML(person.fullName)}">
-            ${person.photo
-              ? `<img src="${escapeHTML(person.photo)}" alt="">`
-              : `<span>${escapeHTML((person.fullName || "?").charAt(0).toUpperCase())}</span>`}
-          </button>
-          <h3>${escapeHTML(person.fullName)}</h3>
-          <p>${escapeHTML(person.nickname || "Tokoh keluarga")}</p>
-          <button class="open-actions"
-            type="button"
-            data-person-id="${escapeHTML(person.id)}">
-            Buka tindakan
-          </button>
-        </article>
-      `).join("")}
-    </div>`;
+  if (file.size > 1200000) {
+    showToast("Ukuran foto maksimal 1,2 MB. Kompres dahulu.", true);
+    event.target.value = "";
+    return;
+  }
 
-  updateStats();
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    currentPhotoData = reader.result;
+  };
+
+  reader.onerror = () => showToast("Foto gagal dibaca.", true);
+  reader.readAsDataURL(file);
+});
+
+$("personForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const fullName = $("fullName").value.trim();
+
+  if (!fullName) {
+    showToast("Nama lengkap harus diisi.", true);
+    return;
+  }
+
+  const id = $("personId").value;
+  const existing = id ? getPerson(id) : null;
+
+  const person = {
+    id: id || makeId(),
+    fullName,
+    nickname: $("nickname").value.trim(),
+    gender: $("gender").value,
+    birthPlace: $("birthPlace").value.trim(),
+    birthDate: $("birthDate").value,
+    deathPlace: $("deathPlace").value.trim(),
+    deathDate: $("deathDate").value,
+    biography: $("biography").value.trim(),
+    verification: $("verification").value,
+    source: $("source").value.trim(),
+    photo: currentPhotoData || existing?.photo || ""
+  };
+
+  if (existing) {
+    people = people.map(item => item.id === id ? person : item);
+    showToast("Data tokoh berhasil diperbarui.");
+  } else {
+    people.push(person);
+    showToast("Tokoh berhasil ditambahkan.");
+  }
+
+  if (saveData()) {
+    closePersonForm();
+    renderAll();
+  }
+});
+
+/* ---------- MENU RADIAL 7 SEKTOR ---------- */
+
+const radialActions = [
+  { key: "parent", label: "Tambah Orang Tua", icon: "♙", color: "#32634a" },
+  { key: "spouse", label: "Tambah Pasangan", icon: "♡", color: "#a17b37" },
+  { key: "child", label: "Tambah Anak", icon: "♧", color: "#477b65" },
+  { key: "connect", label: "Hubungkan", icon: "↗", color: "#54779b" },
+  { key: "disconnect", label: "Putuskan", icon: "⛓", color: "#777d80" },
+  { key: "edit", label: "Edit", icon: "✎", color: "#92744a" },
+  { key: "delete", label: "Hapus", icon: "×", color: "#a94d48" }
+];
+
+function polarPoint(cx, cy, radius, angle) {
+  const rad = angle * Math.PI / 180;
+
+  return {
+    x: cx + radius * Math.cos(rad),
+    y: cy + radius * Math.sin(rad)
+  };
+}
+
+function sectorPath(cx, cy, innerRadius, outerRadius, startAngle, endAngle) {
+  const p1 = polarPoint(cx, cy, outerRadius, startAngle);
+  const p2 = polarPoint(cx, cy, outerRadius, endAngle);
+  const p3 = polarPoint(cx, cy, innerRadius, endAngle);
+  const p4 = polarPoint(cx, cy, innerRadius, startAngle);
+
+  return [
+    `M ${p1.x} ${p1.y}`,
+    `A ${outerRadius} ${outerRadius} 0 0 1 ${p2.x} ${p2.y}`,
+    `L ${p3.x} ${p3.y}`,
+    `A ${innerRadius} ${innerRadius} 0 0 0 ${p4.x} ${p4.y}`,
+    "Z"
+  ].join(" ");
+}
+
+function renderRadialSectors() {
+  const svg = $("radialSectors");
+  const cx = 200;
+  const cy = 200;
+  const inner = 72;
+  const outer = 194;
+  const angleSize = 360 / radialActions.length;
+
+  svg.innerHTML = "";
+
+  radialActions.forEach((action, index) => {
+    const start = -90 + index * angleSize + 1.5;
+    const end = -90 + (index + 1) * angleSize - 1.5;
+    const middle = (start + end) / 2;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", sectorPath(cx, cy, inner, outer, start, end));
+    path.setAttribute("fill", action.color);
+    path.setAttribute("class", "radial-sector");
+    path.setAttribute("role", "button");
+    path.setAttribute("tabindex", "0");
+    path.setAttribute("aria-label", action.label);
+
+    const iconPosition = polarPoint(cx, cy, 125, middle);
+    const labelPosition = polarPoint(cx, cy, 153, middle);
+
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    icon.setAttribute("x", iconPosition.x);
+    icon.setAttribute("y", iconPosition.y + 6);
+    icon.setAttribute("class", "radial-sector-icon");
+    icon.textContent = action.icon;
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", labelPosition.x);
+    label.setAttribute("y", labelPosition.y + 4);
+    label.setAttribute("class", "radial-sector-label");
+
+    const words = action.label.split(" ");
+    if (words.length > 2) {
+      const first = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+      first.setAttribute("x", labelPosition.x);
+      first.setAttribute("dy", "-4");
+      first.textContent = words.slice(0, 2).join(" ");
+
+      const second = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+      second.setAttribute("x", labelPosition.x);
+      second.setAttribute("dy", "14");
+      second.textContent = words.slice(2).join(" ");
+
+      label.append(first, second);
+    } else {
+      label.textContent = action.label;
+    }
+
+    path.addEventListener("click", () => handleRadialAction(action.key));
+    path.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleRadialAction(action.key);
+      }
+    });
+
+    svg.append(path, icon, label);
+  });
+}
+
+function openRadialMenu(personId) {
+  const person = getPerson(personId);
+  if (!person) return;
+
+  selectedPersonId = personId;
+
+  $("radialPersonName").textContent = person.fullName;
+  $("radialPersonInfo").textContent = person.nickname || "Pilih tindakan";
+
+  $("radialPersonPhoto").style.backgroundImage = person.photo
+    ? `url("${person.photo}")`
+    : "";
+
+  $("radialPersonPhoto").textContent = person.photo
+    ? ""
+    : person.fullName.charAt(0).toUpperCase();
+
+  $("radialOverlay").hidden = false;
+  renderRadialSectors();
 }
 
 function closeRadialMenu() {
-  document.getElementById("radialOverlay")?.remove();
+  $("radialOverlay").hidden = true;
   selectedPersonId = null;
 }
 
-function openRadialMenu(id) {
-  const person = getPerson(id);
-  if (!person) return;
+$("radialBackdrop").addEventListener("click", closeRadialMenu);
+
+/* ---------- HUBUNGAN ANTARTOKOH ---------- */
+
+function openRelationForm(action, sourceId) {
+  const source = getPerson(sourceId);
+  if (!source) return;
 
   closeRadialMenu();
-  selectedPersonId = id;
 
-  const overlay = document.createElement("div");
-  overlay.id = "radialOverlay";
-  overlay.className = "radial-overlay";
+  $("relationForm").reset();
+  $("relationAction").value = action;
+  $("relationSourceId").value = sourceId;
 
-  const actions = [
-    ["delete", "🗑️", "Hapus"],
-    ["parents", "👨‍👩‍👦", "Tambah orang tua"],
-    ["partner", "💑", "Tambah pasangan"],
-    ["child", "👶", "Tambah anak"],
-    ["disconnect", "🔗", "Putuskan"],
-    ["connect", "🧷", "Hubungkan"],
-    ["edit", "✏️", "Edit"]
-  ];
-
-  overlay.innerHTML = `
-    <div class="radial-menu" role="dialog" aria-modal="true">
-      <button class="radial-center" type="button">
-        <span class="radial-avatar">
-          ${person.photo
-            ? `<img src="${escapeHTML(person.photo)}" alt="">`
-            : "👤"}
-        </span>
-        <strong>${escapeHTML(person.fullName)}</strong>
-        <small>Profil tokoh</small>
-      </button>
-      ${actions.map((action, index) => `
-        <button class="radial-action"
-          type="button"
-          data-action="${action[0]}"
-          style="--angle:${index * (360 / actions.length)}deg">
-          <span>${action[1]}</span>
-          <small>${action[2]}</small>
-        </button>
-      `).join("")}
-      <button class="radial-close" type="button" aria-label="Tutup">×</button>
-    </div>`;
-
-  document.body.appendChild(overlay);
-
-  overlay.addEventListener("click", event => {
-    if (event.target === overlay ||
-        event.target.closest(".radial-close") ||
-        event.target.closest(".radial-center")) {
-      closeRadialMenu();
-      return;
-    }
-
-    const button = event.target.closest("[data-action]");
-    if (button) runAction(button.dataset.action);
-  });
-}
-
-function addPerson(name, type, relatedId) {
-  name = name.trim();
-  if (!name) return;
-
-  const person = {
-    id: Date.now().toString() + Math.random().toString(16).slice(2),
-    fullName: name,
-    nickname: "",
-    birthPlace: "",
-    birthDate: "",
-    father: "",
-    mother: "",
-    biography: "",
-    source: "",
-    verification: "Belum diverifikasi"
+  const descriptions = {
+    parent: "Pilih orang tua dari tokoh ini.",
+    child: "Pilih anak dari tokoh ini.",
+    spouse: "Pilih pasangan dari tokoh ini.",
+    connect: "Pilih tokoh yang akan dihubungkan.",
+    disconnect: "Pilih hubungan yang akan diputuskan."
   };
 
-  people.push(person);
+  const titles = {
+    parent: "Tambah Orang Tua",
+    child: "Tambah Anak",
+    spouse: "Tambah Pasangan",
+    connect: "Hubungkan Tokoh",
+    disconnect: "Putuskan Hubungan"
+  };
 
-  relationships.push({
-    id: Date.now().toString(),
-    from: type === "parent" ? person.id : relatedId,
-    to: type === "parent" ? relatedId : person.id,
-    type
+  $("relationModalTitle").textContent = titles[action];
+  $("relationModalDescription").textContent = descriptions[action];
+
+  const select = $("relationTargetId");
+  select.innerHTML = '<option value="">Pilih tokoh...</option>';
+
+  let availablePeople = people.filter(person => person.id !== sourceId);
+
+  if (action === "disconnect") {
+    const connectedIds = relations
+      .filter(relation =>
+        relation.from === sourceId || relation.to === sourceId
+      )
+      .map(relation =>
+        relation.from === sourceId ? relation.to : relation.from
+      );
+
+    availablePeople = availablePeople.filter(person =>
+      connectedIds.includes(person.id)
+    );
+  }
+
+  availablePeople.forEach(person => {
+    const option = document.createElement("option");
+    option.value = person.id;
+    option.textContent = person.fullName;
+    select.appendChild(option);
   });
 
-  saveData();
-  renderPeople();
-}
-
-function runAction(action) {
-  const person = getPerson(selectedPersonId);
-  if (!person) return;
-
-  const id = person.id;
-  closeRadialMenu();
-
-  if (action === "edit") {
-    const name = prompt("Ubah nama lengkap:", person.fullName);
-    if (name === null) return;
-    if (!name.trim()) {
-      alert("Nama tidak boleh kosong.");
-      return;
-    }
-
-    person.fullName = name.trim();
-    const bio = prompt("Ubah riwayat hidup:", person.biography || "");
-    if (bio !== null) person.biography = bio;
-
-    saveData();
-    renderPeople();
-    return;
-  }
-
-  if (action === "delete") {
-    if (!confirm(`Hapus data ${person.fullName}? Hubungan tokoh ini juga akan dihapus.`)) return;
-    people = people.filter(p => String(p.id) !== String(id));
-    relationships = relationships.filter(r =>
-      String(r.from) !== String(id) && String(r.to) !== String(id)
-    );
-    saveData();
-    renderPeople();
-    return;
-  }
-
-  if (action === "parents") {
-    const choice = prompt("Tambah orang tua:\n1 = Ayah\n2 = Ibu\n3 = Keduanya");
-    if (!choice) return;
-
-    if (choice === "1" || choice === "3") {
-      const father = prompt("Masukkan nama ayah:");
-      if (father) addPerson(father, "parent", id);
-    }
-    if (choice === "2" || choice === "3") {
-      const mother = prompt("Masukkan nama ibu:");
-      if (mother) addPerson(mother, "parent", id);
-    }
-    return;
-  }
-
-  if (action === "partner") {
-    const name = prompt("Masukkan nama pasangan:");
-    if (name) addPerson(name, "spouse", id);
-    return;
-  }
-
-  if (action === "child") {
-    const name = prompt("Masukkan nama anak:");
-    if (name) addPerson(name, "child", id);
-    return;
-  }
+  $("relationTypeField").hidden = action !== "connect";
+  $("relationRoleField").hidden = action !== "connect";
 
   if (action === "connect") {
-    const name = prompt("Ketik nama tokoh yang sudah ada:");
-    if (!name) return;
+    $("relationType").value = "knowledge";
+    $("relationRole").value = "teacher";
+  }
 
-    const target = people.find(p =>
-      p.fullName.toLowerCase() === name.trim().toLowerCase() &&
-      String(p.id) !== String(id)
-    );
+  if (action === "disconnect" && availablePeople.length === 0) {
+    showToast("Tokoh ini belum memiliki hubungan.", true);
+    return;
+  }
 
-    if (!target) {
-      alert("Tokoh tidak ditemukan. Tambahkan tokoh tersebut terlebih dahulu.");
-      return;
-    }
+  if (availablePeople.length === 0 && action !== "disconnect") {
+    showToast("Tambahkan tokoh lain terlebih dahulu.", true);
+    return;
+  }
 
-    const type = prompt(
-      "Jenis hubungan:\n1 = Guru\n2 = Murid\n3 = Kerabat\n4 = Hubungan sejarah"
-    );
+  $("relationModalOverlay").hidden = false;
+}
 
-    const types = {
-      "1": "guru",
-      "2": "murid",
-      "3": "kerabat",
-      "4": "sejarah"
-    };
+function addRelation(sourceId, targetId, type, role) {
+  if (sourceId === targetId) {
+    showToast("Tokoh tidak dapat dihubungkan dengan dirinya sendiri.", true);
+    return false;
+  }
 
-    if (!types[type]) return;
+  const exists = relations.some(relation =>
+    relation.from === sourceId &&
+    relation.to === targetId &&
+    relation.type === type &&
+    relation.role === role
+  );
 
-    relationships.push({
-      id: Date.now().toString(),
-      from: id,
-      to: target.id,
-      type: types[type]
-    });
+  if (exists) {
+    showToast("Hubungan tersebut sudah tercatat.", true);
+    return false;
+  }
 
-    saveData();
-    renderPeople();
-    alert("Hubungan berhasil ditambahkan.");
+  relations.push({
+    id: makeId(),
+    from: sourceId,
+    to: targetId,
+    type,
+    role
+  });
+
+  return saveData();
+}
+
+$("relationForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const action = $("relationAction").value;
+  const sourceId = $("relationSourceId").value;
+  const targetId = $("relationTargetId").value;
+
+  if (!targetId) {
+    showToast("Pilih tokoh terlebih dahulu.", true);
+    return;
+  }
+
+  if (!getPerson(sourceId) || !getPerson(targetId)) {
+    showToast("Data tokoh tidak ditemukan.", true);
     return;
   }
 
   if (action === "disconnect") {
-    const related = relationships.filter(r =>
-      String(r.from) === String(id) || String(r.to) === String(id)
-    );
+    const before = relations.length;
 
-    if (!related.length) {
-      alert("Belum ada hubungan yang tercatat.");
+    relations = relations.filter(relation => !(
+      (relation.from === sourceId && relation.to === targetId) ||
+      (relation.from === targetId && relation.to === sourceId)
+    ));
+
+    if (before === relations.length) {
+      showToast("Hubungan tidak ditemukan.", true);
       return;
     }
 
-    const choices = related.map((r, i) => {
-      const otherId = String(r.from) === String(id) ? r.to : r.from;
-      const other = getPerson(otherId);
-      return `${i + 1}. ${other?.fullName || "Tokoh"} — ${r.type}`;
-    }).join("\n");
-
-    const number = Number(prompt("Pilih hubungan yang ingin diputus:\n" + choices));
-    if (!Number.isInteger(number) || number < 1 || number > related.length) return;
-
-    const selected = related[number - 1];
-    relationships = relationships.filter(r => r.id !== selected.id);
     saveData();
-    renderPeople();
-    alert("Hubungan berhasil diputus.");
+    showToast("Hubungan berhasil diputuskan.");
+  } else {
+    let type = "biological";
+    let role = action;
+
+    if (action === "spouse") {
+      type = "spouse";
+      role = "spouse";
+    }
+
+    if (action === "connect") {
+      type = $("relationType").value;
+      role = $("relationRole").value;
+    }
+
+    if (!addRelation(sourceId, targetId, type, role)) return;
+
+    showToast("Hubungan berhasil ditambahkan.");
+  }
+
+  $("relationModalOverlay").hidden = true;
+  renderAll();
+});
+
+$("closeRelationModalButton").addEventListener("click", () => {
+  $("relationModalOverlay").hidden = true;
+});
+
+$("cancelRelationButton").addEventListener("click", () => {
+  $("relationModalOverlay").hidden = true;
+});
+
+$("relationModalOverlay").addEventListener("click", event => {
+  if (event.target === $("relationModalOverlay")) {
+    $("relationModalOverlay").hidden = true;
+  }
+});
+
+/* ---------- AKSI MENU RADIAL ---------- */
+
+function handleRadialAction(action) {
+  const id = selectedPersonId;
+  const person = getPerson(id);
+
+  if (!person) return;
+
+  switch (action) {
+    case "parent":
+    case "child":
+    case "spouse":
+    case "connect":
+    case "disconnect":
+      openRelationForm(action, id);
+      break;
+
+    case "edit":
+      openPersonForm(person);
+      break;
+
+    case "delete":
+      closeRadialMenu();
+      askDeletePerson(id);
+      break;
   }
 }
 
-showFormButton.addEventListener("click", () => {
-  form.classList.remove("hidden");
-  form.scrollIntoView({ behavior: "smooth" });
-});
+/* ---------- KONFIRMASI HAPUS ---------- */
 
-cancelButton.addEventListener("click", () => {
-  form.reset();
-  form.classList.add("hidden");
-});
+function askDeletePerson(id) {
+  const person = getPerson(id);
+  if (!person) return;
 
-form.addEventListener("submit", event => {
-  event.preventDefault();
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
 
-  const person = {
-    id: Date.now().toString() + Math.random().toString(16).slice(2),
-    fullName: document.getElementById("fullName").value.trim(),
-    nickname: document.getElementById("nickname").value.trim(),
-    birthPlace: document.getElementById("birthPlace").value.trim(),
-    birthDate: document.getElementById("birthDate").value,
-    father: document.getElementById("father").value.trim(),
-    mother: document.getElementById("mother").value.trim(),
-    biography: document.getElementById("biography").value.trim(),
-    source: document.getElementById("source").value.trim(),
-    verification: document.getElementById("verification").value
+  const dialog = document.createElement("div");
+  dialog.className = "modal-dialog";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Hapus Tokoh?";
+
+  const message = document.createElement("p");
+  message.textContent =
+    `Apakah Anda yakin ingin menghapus ${person.fullName}? Hubungan yang tercatat dengan tokoh ini juga akan dihapus.`;
+
+  const footer = document.createElement("div");
+  footer.className = "modal-footer";
+
+  const cancel = document.createElement("button");
+  cancel.className = "button button-secondary";
+  cancel.textContent = "Batal";
+
+  const confirm = document.createElement("button");
+  confirm.className = "button";
+  confirm.style.background = "#a94d48";
+  confirm.style.color = "white";
+  confirm.textContent = "Ya, Hapus";
+
+  cancel.addEventListener("click", () => overlay.remove());
+
+  confirm.addEventListener("click", () => {
+    people = people.filter(item => item.id !== id);
+
+    relations = relations.filter(relation =>
+      relation.from !== id && relation.to !== id
+    );
+
+    saveData();
+    renderAll();
+    overlay.remove();
+    showToast("Tokoh berhasil dihapus.");
+  });
+
+  footer.append(cancel, confirm);
+  dialog.append(heading, message, footer);
+  overlay.append(dialog);
+  document.body.append(overlay);
+}
+
+/* ---------- GAMBAR POHON SILSILAH ---------- */
+
+function getTreePositions() {
+  const positions = new Map();
+  const placed = new Set();
+
+  const biological = relations.filter(relation =>
+    relation.type === "biological" &&
+    getPerson(relation.from) &&
+    getPerson(relation.to)
+  );
+
+  let roots = people.filter(person =>
+    !biological.some(relation =>
+      relation.to === person.id && relation.role === "child"
+    )
+  );
+
+  if (roots.length === 0 && people.length) {
+    roots = [people[0]];
+  }
+
+  const levels = new Map();
+  const queue = roots.map(person => ({ id: person.id, level: 0 }));
+
+  while (queue.length) {
+    const current = queue.shift();
+
+    if (placed.has(current.id)) continue;
+
+    placed.add(current.id);
+    levels.set(current.id, current.level);
+
+    biological
+      .filter(relation =>
+        relation.from === current.id && relation.role === "child"
+      )
+      .forEach(relation => {
+        queue.push({ id: relation.to, level: current.level + 1 });
+      });
+  }
+
+  people.forEach(person => {
+    if (!placed.has(person.id)) {
+      levels.set(person.id, 0);
+    }
+  });
+
+  const groups = new Map();
+
+  people.forEach(person => {
+    const level = levels.get(person.id) || 0;
+    if (!groups.has(level)) groups.set(level, []);
+    groups.get(level).push(person);
+  });
+
+  const sortedLevels = [...groups.keys()].sort((a, b) => a - b);
+  const canvasWidth = Math.max(900, ...[...groups.values()].map(group => group.length * 180 + 100));
+  const rowHeight = 175;
+
+  sortedLevels.forEach(level => {
+    const group = groups.get(level);
+    const spacing = canvasWidth / (group.length + 1);
+
+    group.forEach((person, index) => {
+      positions.set(person.id, {
+        x: spacing * (index + 1),
+        y: 100 + level * rowHeight
+      });
+    });
+  });
+
+  return {
+    positions,
+    width: canvasWidth,
+    height: Math.max(470, (sortedLevels.length + 1) * rowHeight)
   };
+}
 
-  if (!person.fullName) return alert("Nama lengkap harus diisi.");
+function renderTree() {
+  const canvas = $("treeCanvas");
+  const empty = $("emptyTree");
 
-  people.push(person);
-  saveData();
-  renderPeople();
-  form.reset();
-  form.classList.add("hidden");
-  alert("Tokoh berhasil ditambahkan.");
-});
+  canvas.querySelectorAll(".person-node, .tree-lines").forEach(element => {
+    element.remove();
+  });
 
-peopleList.addEventListener("click", event => {
-  const button = event.target.closest("[data-person-id]");
-  if (button) openRadialMenu(button.dataset.personId);
-});
+  if (!people.length) {
+    empty.hidden = false;
+    canvas.style.width = "100%";
+    canvas.style.height = "470px";
+    return;
+  }
 
-renderPeople();
+  empty.hidden = true;
+
+  const tree = getTreePositions();
+  const positions = tree.positions;
+
+  canvas.style.width = tree.width + "px";
+  canvas.style.height = tree.height + "px";
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "tree-lines");
+  svg.setAttribute("viewBox", `0 0 ${tree.width} ${tree.height}`);
+
+  relations.forEach(relation => {
+    const from = positions.get(relation.from);
+    const to = positions.get(relation.to);
+
+  
