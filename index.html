@@ -4,135 +4,368 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Silsilah Digital - Jejak Leluhur Nusantara</title>
+  <meta name="theme-color" content="#172b25">
+  <meta name="description" content="Silsilah Digital - Arsip keluarga, tokoh, ulama, dan jejak leluhur Nusantara.">
+  <title>Silsilah Digital | Jejak Leluhur Nusantara</title>
   <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
 </head>
+
 <body>
-  <header class="header">
-    <div class="brand">
-      <div class="brand-icon">🌳</div>
-      <div>
-        <h1>Silsilah Digital</h1>
-        <p>Jejak Leluhur Nusantara</p>
-      </div>
-    </div>
-    <span class="private-label">Arsip Keluarga</span>
-  </header>
+  <div class="app-shell">
 
-  <main class="container">
-    <section class="hero">
-      <p class="eyebrow">MENJAGA WARISAN SEJARAH</p>
-      <h2>Menelusuri Jejak, Merawat Sejarah</h2>
-      <p>
-        Dokumentasikan silsilah keluarga, kisah para leluhur,
-        ulama, kiai, dan tokoh sejarah dalam satu ruang digital.
-      </p>
-    </section>
-
-    <section class="stats">
-      <div class="stat-card">
-        <span>👤</span>
-        <strong id="totalPeople">0</strong>
-        <small>Data Tokoh</small>
-      </div>
-      <div class="stat-card">
-        <span>🌿</span>
-        <strong id="totalRelations">0</strong>
-        <small>Hubungan</small>
-      </div>
-      <div class="stat-card">
-        <span>📚</span>
-        <strong id="totalSources">0</strong>
-        <small>Dokumen</small>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-heading">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-symbol">SD</div>
         <div>
-          <p class="eyebrow">ARSIP DIGITAL</p>
-          <h2>Daftar Leluhur dan Tokoh</h2>
+          <h1>Silsilah Digital</h1>
+          <p>Jejak Leluhur Nusantara</p>
         </div>
-        <button id="showFormButton">+ Tambah Tokoh</button>
       </div>
 
-      <form id="personForm" class="person-form hidden">
-        <h3>Tambah Data Tokoh</h3>
+      <nav class="main-nav">
+        <button class="nav-item active" data-page="tree">
+          <span>⌘</span> Pohon Silsilah
+        </button>
+        <button class="nav-item" data-page="people">
+          <span>♙</span> Daftar Tokoh
+        </button>
+        <button class="nav-item" data-page="sources">
+          <span>▤</span> Arsip & Sumber
+        </button>
+        <button class="nav-item" data-page="about">
+          <span>ⓘ</span> Tentang Arsip
+        </button>
+      </nav>
 
-        <label>Nama lengkap
-          <input id="fullName" required placeholder="Nama lengkap tokoh">
-        </label>
+      <div class="sidebar-bottom">
+        <div class="privacy-note">
+          <strong>Ruang Arsip</strong>
+          <p>Catat dan telusuri jejak keluarga serta para leluhur.</p>
+        </div>
+        <p class="version">Silsilah Digital • Versi 1.0</p>
+      </div>
+    </aside>
 
-        <label>Nama panggilan atau alias
-          <input id="nickname" placeholder="Nama lain jika ada">
-        </label>
+    <!-- AREA UTAMA -->
+    <main class="main-content">
 
-        <div class="two-columns">
-          <label>Tempat lahir
-            <input id="birthPlace" placeholder="Contoh: Blora">
+      <header class="topbar">
+        <button class="mobile-menu-button" id="mobileMenuButton" aria-label="Buka menu">
+          ☰
+        </button>
+
+        <div class="page-heading">
+          <h2 id="pageTitle">Pohon Silsilah</h2>
+          <p id="pageSubtitle">Telusuri hubungan keluarga dan jejak leluhur.</p>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="button button-secondary" id="exportButton">
+            Ekspor Data
+          </button>
+          <button class="button button-primary" id="addPersonButton">
+            + Tambah Tokoh
+          </button>
+        </div>
+      </header>
+
+      <!-- HALAMAN POHON SILSILAH -->
+      <section class="page-section active" id="treePage">
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <span>Total Tokoh</span>
+            <strong id="totalPeople">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Hubungan</span>
+            <strong id="totalRelations">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Sumber Arsip</span>
+            <strong id="totalSources">0</strong>
+          </article>
+        </div>
+
+        <div class="tree-toolbar">
+          <div>
+            <h3>Peta Silsilah</h3>
+            <p>Klik foto atau nama tokoh untuk membuka menu tindakan.</p>
+          </div>
+
+          <div class="tree-controls">
+            <button id="zoomOutButton" aria-label="Perkecil">−</button>
+            <button id="zoomResetButton">Atur Ulang</button>
+            <button id="zoomInButton" aria-label="Perbesar">+</button>
+          </div>
+        </div>
+
+        <div class="tree-workspace" id="treeWorkspace">
+          <div class="tree-canvas" id="treeCanvas">
+
+            <!-- Pohon silsilah akan dibuat oleh app.js -->
+            <div class="empty-state" id="emptyTree">
+              <div class="empty-icon">♧</div>
+              <h3>Belum Ada Data Silsilah</h3>
+              <p>Mulailah dengan memasukkan tokoh pertama ke dalam arsip.</p>
+              <button class="button button-primary" id="emptyAddButton">
+                + Tambahkan Tokoh Pertama
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="tree-legend">
+          <span><i class="legend-dot biological"></i> Hubungan biologis</span>
+          <span><i class="legend-dot spouse"></i> Hubungan pasangan</span>
+          <span><i class="legend-dot knowledge"></i> Hubungan keilmuan</span>
+        </div>
+      </section>
+
+      <!-- HALAMAN DAFTAR TOKOH -->
+      <section class="page-section" id="peoplePage">
+        <div class="section-toolbar">
+          <div>
+            <h3>Daftar Tokoh</h3>
+            <p>Seluruh tokoh yang tercatat dalam arsip.</p>
+          </div>
+          <input
+            type="search"
+            id="searchPeople"
+            placeholder="Cari nama tokoh..."
+            aria-label="Cari nama tokoh"
+          >
+        </div>
+
+        <div class="people-grid" id="peopleList">
+          <div class="empty-state">
+            <h3>Belum Ada Tokoh</h3>
+            <p>Data tokoh yang ditambahkan akan muncul di sini.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HALAMAN ARSIP DAN SUMBER -->
+      <section class="page-section" id="sourcesPage">
+        <div class="section-toolbar">
+          <div>
+            <h3>Arsip & Sumber Sejarah</h3>
+            <p>Tempat mencatat referensi, dokumen, dan bukti sejarah.</p>
+          </div>
+        </div>
+
+        <div class="empty-state">
+          <h3>Arsip Belum Tersedia</h3>
+          <p>Fitur pengelolaan dokumen akan kita bangun pada tahap berikutnya.</p>
+        </div>
+      </section>
+
+      <!-- HALAMAN TENTANG -->
+      <section class="page-section" id="aboutPage">
+        <div class="about-panel">
+          <h3>Silsilah Digital</h3>
+          <p>
+            Silsilah Digital adalah ruang dokumentasi untuk mencatat,
+            menghubungkan, dan menelusuri sejarah keluarga, leluhur,
+            ulama, kiai, serta tokoh-tokoh Nusantara.
+          </p>
+          <p>
+            Setiap informasi diharapkan dilengkapi sumber dan keterangan
+            agar riwayat yang dicatat dapat ditelusuri kembali.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MENU RADIAL TOKOH -->
+  <div class="radial-overlay" id="radialOverlay" hidden>
+    <div class="radial-backdrop" id="radialBackdrop"></div>
+
+    <div class="radial-menu" id="radialMenu">
+      <div class="radial-center" id="radialCenter">
+        <div class="radial-person-photo" id="radialPersonPhoto">?</div>
+        <strong id="radialPersonName">Nama Tokoh</strong>
+        <small id="radialPersonInfo">Pilih tindakan</small>
+      </div>
+
+      <!-- Sektor menu akan digambar oleh app.js -->
+      <svg
+        class="radial-sectors"
+        id="radialSectors"
+        viewBox="0 0 400 400"
+        role="group"
+        aria-label="Menu tindakan tokoh"
+      ></svg>
+    </div>
+  </div>
+
+  <!-- MODAL FORMULIR -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+      <div class="modal-header">
+        <div>
+          <h3 id="modalTitle">Tambah Tokoh</h3>
+          <p id="modalDescription">Masukkan informasi tokoh ke dalam arsip.</p>
+        </div>
+        <button class="modal-close" id="closeModalButton" aria-label="Tutup">×</button>
+      </div>
+
+      <form id="personForm">
+        <input type="hidden" id="personId">
+        <input type="hidden" id="formAction">
+
+        <div class="form-grid">
+          <label class="form-field full-width">
+            Nama lengkap
+            <input type="text" id="fullName" required placeholder="Nama lengkap tokoh">
           </label>
-          <label>Tanggal lahir
-            <input id="birthDate" type="date">
+
+          <label class="form-field">
+            Nama panggilan / alias
+            <input type="text" id="nickname" placeholder="Nama lain">
+          </label>
+
+          <label class="form-field">
+            Jenis kelamin
+            <select id="gender">
+              <option value="">Belum diketahui</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </label>
+
+          <label class="form-field">
+            Tempat lahir
+            <input type="text" id="birthPlace" placeholder="Tempat lahir">
+          </label>
+
+          <label class="form-field">
+            Tanggal lahir
+            <input type="date" id="birthDate">
+          </label>
+
+          <label class="form-field">
+            Tempat wafat
+            <input type="text" id="deathPlace" placeholder="Tempat wafat">
+          </label>
+
+          <label class="form-field">
+            Tanggal wafat
+            <input type="date" id="deathDate">
+          </label>
+
+          <label class="form-field full-width">
+            Foto tokoh
+            <input type="file" id="personPhoto" accept="image/*">
+            <small>Untuk tahap awal, foto disimpan secara lokal di perangkat.</small>
+          </label>
+
+          <label class="form-field full-width">
+            Riwayat hidup / biografi
+            <textarea id="biography" rows="5" placeholder="Tuliskan riwayat hidup tokoh..."></textarea>
+          </label>
+
+          <label class="form-field">
+            Tingkat verifikasi
+            <select id="verification">
+              <option value="Belum diverifikasi">Belum diverifikasi</option>
+              <option value="Perlu diteliti">Perlu diteliti</option>
+              <option value="Terverifikasi">Terverifikasi</option>
+            </select>
+          </label>
+
+          <label class="form-field">
+            Sumber / referensi
+            <input type="text" id="source" placeholder="Buku, manuskrip, wawancara, dan lain-lain">
           </label>
         </div>
 
-        <label>Nama ayah
-          <input id="father" placeholder="Nama ayah">
-        </label>
+        <div class="modal-footer">
+          <button type="button" class="button button-secondary" id="cancelModalButton">
+            Batal
+          </button>
+          <button type="submit" class="button button-primary" id="savePersonButton">
+            Simpan Tokoh
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-        <label>Nama ibu
-          <input id="mother" placeholder="Nama ibu">
-        </label>
+  <!-- MODAL HUBUNGAN ANTARTOKOH -->
+  <div class="modal-overlay" id="relationModalOverlay" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="relationModalTitle">
 
-        <label>Riwayat hidup
-          <textarea id="biography" rows="4" placeholder="Tuliskan kisah hidup dan sejarah tokoh"></textarea>
-        </label>
+      <div class="modal-header">
+        <div>
+          <h3 id="relationModalTitle">Tambah Hubungan</h3>
+          <p id="relationModalDescription">Tentukan hubungan antartokoh.</p>
+        </div>
+        <button class="modal-close" id="closeRelationModalButton" aria-label="Tutup">×</button>
+      </div>
 
-        <label>Sumber informasi
-          <input id="source" placeholder="Contoh: dokumen keluarga, wawancara, kitab">
-        </label>
+      <form id="relationForm">
+        <input type="hidden" id="relationAction">
+        <input type="hidden" id="relationSourceId">
 
-        <label>Status verifikasi
-          <select id="verification">
-            <option value="Belum diverifikasi">Belum diverifikasi</option>
-            <option value="Tradisi lisan">Tradisi lisan</option>
-            <option value="Perlu penelitian">Perlu penelitian</option>
-            <option value="Terverifikasi">Terverifikasi</option>
+        <label class="form-field" id="relationTargetField">
+          Pilih tokoh
+          <select id="relationTargetId">
+            <option value="">Pilih tokoh...</option>
           </select>
         </label>
 
-        <div class="form-actions">
-          <button type="submit">Simpan Data</button>
-          <button type="button" id="cancelButton" class="secondary">Batal</button>
+        <label class="form-field" id="relationTypeField">
+          Jenis hubungan
+          <select id="relationType">
+            <option value="biological">Keluarga / biologis</option>
+            <option value="spouse">Pasangan</option>
+            <option value="knowledge">Guru / murid / keilmuan</option>
+          </select>
+        </label>
+
+        <label class="form-field" id="relationRoleField">
+          Peran hubungan
+          <select id="relationRole">
+            <option value="parent">Orang tua</option>
+            <option value="spouse">Pasangan</option>
+            <option value="child">Anak</option>
+            <option value="teacher">Guru</option>
+            <option value="student">Murid</option>
+            <option value="other">Lainnya</option>
+          </select>
+        </label>
+
+        <div class="modal-footer">
+          <button type="button" class="button button-secondary" id="cancelRelationButton">
+            Batal
+          </button>
+          <button type="submit" class="button button-primary">
+            Simpan Hubungan
+          </button>
         </div>
       </form>
+    </div>
+  </div>
 
-      <div id="peopleList" class="people-list">
-        <div class="empty-state">
-          <span>🌱</span>
-          <h3>Belum ada data tokoh</h3>
-          <p>Mulailah dengan menambahkan data leluhur atau tokoh pertama.</p>
-        </div>
-      </div>
-    </section>
+  <!-- PANEL PROFIL TOKOH -->
+  <aside class="profile-panel" id="profilePanel" aria-label="Profil tokoh" hidden>
+    <div class="profile-header">
+      <h3>Profil Tokoh</h3>
+      <button id="closeProfileButton" aria-label="Tutup profil">×</button>
+    </div>
 
-    <section class="panel">
-      <p class="eyebrow">PENGEMBANGAN SELANJUTNYA</p>
-      <h2>Lebih dari Sekadar Pohon Silsilah</h2>
-      <div class="feature-grid">
-        <article>🌳 <h3>Pohon Keluarga</h3><p>Hubungan ayah, ibu, pasangan, dan keturunan.</p></article>
-        <article>📜 <h3>Nasab Keilmuan</h3><p>Hubungan guru, murid, dan jalur keilmuan.</p></article>
-        <article>🗺️ <h3>Peta Sejarah</h3><p>Menelusuri tempat lahir, wafat, dan perjalanan tokoh.</p></article>
-        <article>📁 <h3>Arsip Dokumen</h3><p>Menyimpan foto, manuskrip, dan sumber sejarah.</p></article>
-      </div>
-    </section>
+    <div id="profileContent"></div>
+  </aside>
 
-    <footer>
-      <p>© 2026 Silsilah Digital · Jejak Leluhur Nusantara</p>
-      <small>Arsip keluarga dan sejarah dalam satu ruang digital.</small>
-    </footer>
-  </main>
+  <!-- NOTIFIKASI -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <script src="app.js"></script>
 </body>
 </html>
