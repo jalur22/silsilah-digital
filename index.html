@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silsilah Digital - Jejak Leluhur Nusantara</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">🌳</div>
+      <div>
+        <h1>Silsilah Digital</h1>
+        <p>Jejak Leluhur Nusantara</p>
+      </div>
+    </div>
+    <span class="private-label">Arsip Keluarga</span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">MENJAGA WARISAN SEJARAH</p>
+      <h2>Menelusuri Jejak, Merawat Sejarah</h2>
+      <p>
+        Dokumentasikan silsilah keluarga, kisah para leluhur,
+        ulama, kiai, dan tokoh sejarah dalam satu ruang digital.
+      </p>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card">
+        <span>👤</span>
+        <strong id="totalPeople">0</strong>
+        <small>Data Tokoh</small>
+      </div>
+      <div class="stat-card">
+        <span>🌿</span>
+        <strong id="totalRelations">0</strong>
+        <small>Hubungan</small>
+      </div>
+      <div class="stat-card">
+        <span>📚</span>
+        <strong id="totalSources">0</strong>
+        <small>Dokumen</small>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ARSIP DIGITAL</p>
+          <h2>Daftar Leluhur dan Tokoh</h2>
+        </div>
+        <button id="showFormButton">+ Tambah Tokoh</button>
+      </div>
+
+      <form id="personForm" class="person-form hidden">
+        <h3>Tambah Data Tokoh</h3>
+
+        <label>Nama lengkap
+          <input id="fullName" required placeholder="Nama lengkap tokoh">
+        </label>
+
+        <label>Nama panggilan atau alias
+          <input id="nickname" placeholder="Nama lain jika ada">
+        </label>
+
+        <div class="two-columns">
+          <label>Tempat lahir
+            <input id="birthPlace" placeholder="Contoh: Blora">
+          </label>
+          <label>Tanggal lahir
+            <input id="birthDate" type="date">
+          </label>
+        </div>
+
+        <label>Nama ayah
+          <input id="father" placeholder="Nama ayah">
+        </label>
+
+        <label>Nama ibu
+          <input id="mother" placeholder="Nama ibu">
+        </label>
+
+        <label>Riwayat hidup
+          <textarea id="biography" rows="4" placeholder="Tuliskan kisah hidup dan sejarah tokoh"></textarea>
+        </label>
+
+        <label>Sumber informasi
+          <input id="source" placeholder="Contoh: dokumen keluarga, wawancara, kitab">
+        </label>
+
+        <label>Status verifikasi
+          <select id="verification">
+            <option value="Belum diverifikasi">Belum diverifikasi</option>
+            <option value="Tradisi lisan">Tradisi lisan</option>
+            <option value="Perlu penelitian">Perlu penelitian</option>
+            <option value="Terverifikasi">Terverifikasi</option>
+          </select>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit">Simpan Data</button>
+          <button type="button" id="cancelButton" class="secondary">Batal</button>
+        </div>
+      </form>
+
+      <div id="peopleList" class="people-list">
+        <div class="empty-state">
+          <span>🌱</span>
+          <h3>Belum ada data tokoh</h3>
+          <p>Mulailah dengan menambahkan data leluhur atau tokoh pertama.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="eyebrow">PENGEMBANGAN SELANJUTNYA</p>
+      <h2>Lebih dari Sekadar Pohon Silsilah</h2>
+      <div class="feature-grid">
+        <article>🌳 <h3>Pohon Keluarga</h3><p>Hubungan ayah, ibu, pasangan, dan keturunan.</p></article>
+        <article>📜 <h3>Nasab Keilmuan</h3><p>Hubungan guru, murid, dan jalur keilmuan.</p></article>
+        <article>🗺️ <h3>Peta Sejarah</h3><p>Menelusuri tempat lahir, wafat, dan perjalanan tokoh.</p></article>
+        <article>📁 <h3>Arsip Dokumen</h3><p>Menyimpan foto, manuskrip, dan sumber sejarah.</p></article>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 Silsilah Digital · Jejak Leluhur Nusantara</p>
+      <small>Arsip keluarga dan sejarah dalam satu ruang digital.</small>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
